@@ -18,7 +18,7 @@ const std::string INTERVAL_END_FLAG_SHORTEN = "-e";
 
 const std::string MANUAL = "** Network calculation of the integral on the interval **\n\n"
     "This utility program calculate integral of the given function on provided interval. Program uses Monte-Carlo algorithm\n"
-    "so the result may not be as accurate\n\n"
+    "so the result may not be as accurate. Limitations: provided function must be placed higher than Ox.\n\n"
     "Required flags Long flags          Meaning\n"
     "-E             --expression        Provide function will be integrated\n"
     "-s             --interval-start    Provide start point of integration. Type double. It will be included\n"
@@ -102,9 +102,10 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    std::string postfixNotationExpression;
     try
     {
-        std::string postfixNotationExpression = toPostfixNotation(expression);
+        postfixNotationExpression = toPostfixNotation(expression);
     }
     catch(const InvalidCharacterException e)
     {
@@ -119,7 +120,7 @@ int main(int argc, char* argv[])
 
     SimpleJsonBuilder builder;
     std::string data = builder
-        .addProperty("expression", expression)
+        .addProperty("expression", postfixNotationExpression)
         .addProperty("start", intervalStart)
         .addProperty("end", intervalEnd)
         .toString();

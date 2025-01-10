@@ -1,5 +1,5 @@
 #include <iostream>
 
-std::string toPostfixNotation(const std::string& source);
-
 double computePostfixNotationExpression(const std::string& expression, double argument);
+
+double computeMaxFuncValue(const std::string& expression, double start, double end, double step);
