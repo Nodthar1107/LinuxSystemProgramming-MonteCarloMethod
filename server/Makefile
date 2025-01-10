@@ -1,12 +1,15 @@
 TARGET_DIR = bin
 
-HEADERS = src/utils/*.h
+HEADERS = src/utils/*.h \
+		src/net/*.h
 
 SOURCES = src/server.cpp \
 	src/utils/expressionUtils.cpp \
 	src/utils/SimpleJsonBuilder.cpp \
 	src/utils/jsonUtils.cpp \
-	src/utils/threadUtils.cpp
+	src/utils/threadUtils.cpp \
+	src/net/networkHandlers.cpp \
+	src/net/socket.cpp
 
 
 all: clean configure build

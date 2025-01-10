@@ -7,130 +7,54 @@
 #include <thread>
 #include <stdlib.h>
 
-#include "utils/threadUtils.h"
 #include "utils/SimpleJsonBuilder.h"
-#include "utils/jsonUtils.h"
-
+#include "utils/commandLineUtils.h"
 #include "utils/expressionUtils.h"
+#include "utils/jsonUtils.h"
+#include "utils/threadUtils.h"
+#include "net/socket.h"
 
-const int SERVER_PORT = 8080;
+#include "net/networkHandlers.h"
 
-int main()
+const int DEFAULT_PORT = 8080;
+const std::string MANUAL = "** Server of integral computing **\n\n"
+	"This utility program works as server for integral computing. it can work independently or in conjunction with other "
+	"servers on the local network.\n\n"
+	"Options       Long flags         Meaning\n"
+	"-P            --port             Set port that server will be use. By default it use 8080\n"
+	"-t            --threads-count    Set number of thread for parallel integral computing. By default, the number "
+	"of threads that can be created is taken from the system.\n"
+	"-p            --points           Sets the number of points on the x-axis. By default it use 100 points";
+
+
+int main(int argc, char* argv[])
 {
-	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (serverSocket == 0)
-	{
-		throw std::runtime_error("Socket create error");
-	}
+	sockaddr_in addr = createAddressDescriptor(DEFAULT_PORT);
 
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(SERVER_PORT);
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
+	int socket = createServerSocket(addr, 1);
 	int addrlen = sizeof(addr);
 
-	if(bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) > 0)
+	std::cout << "Server listening on port " << DEFAULT_PORT << "..." << std::endl;
+
+	while (true)
 	{
-		throw std::runtime_error("Socket bind error");
-	}
-
-	if (listen(serverSocket, 1) < 0)
-	{
-		throw std::runtime_error("Listen error");
-	}
-
-	std::cout << "Server listening on port " << SERVER_PORT << "..." << std::endl;
-
-	int clientSocket = accept(serverSocket, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
-
-	if (clientSocket < 0)
-	{
-		throw std::runtime_error("Client socket error");
-	}
-
-	char buffer[1024] = {0};
-	read(clientSocket, buffer, 1024);
-	std::cout << "Data from client:" << std::endl << buffer << std::endl;
-
-	int availabelThreads = std::thread::hardware_concurrency();
-	if (availabelThreads == 0)
-	{
-		availabelThreads = 1;
-	}
-
-	availabelThreads = 3;
-
-	std::cout << "Availabel threads count: " << availabelThreads << std::endl;
-
-	std::string expression;
-	std::string intervalStart;
-	std::string intervalEnd;
-
-	std::string bufferAsString(buffer);
-
-	jsonGetProperty(bufferAsString, "expression", expression);
-	jsonGetProperty(bufferAsString, "start", intervalStart);
-	jsonGetProperty(bufferAsString, "end", intervalEnd);
-
-	// Обработка ошибок в случае неправильной передачи данных
-	// Nothing
-
-	double intervalStartValue = std::stod(intervalStart);
-	double intervalEndValue = std::stod(intervalEnd);
-
-	std::cout << "Expression: " << expression << std::endl;
-	std::cout << "Start: " << intervalStartValue << std::endl;
-	std::cout << "End: " << intervalEndValue << std::endl;
-
-	double yMin = 0;
-	double yMax = computeMaxFuncValue(expression, intervalStartValue, intervalEndValue,
-			(intervalEndValue - intervalStartValue) / POINTS_COUNT);
-
-	ThreadData threadsData[availabelThreads];
-	pthread_t threads[availabelThreads];
-
-	for (int index = 0; index < availabelThreads; ++index)
-	{
-		threadsData[index].id = threads[index];
-		threadsData->progress = 0;
-		threadsData[index].expression = expression;
-		threadsData[index].intervalLength = (intervalEndValue - intervalStartValue) / availabelThreads;
-		threadsData[index].intervalStart = intervalStartValue + threadsData[index].intervalLength * index;
-		threadsData[index].yMin = yMin;
-		threadsData[index].yMax = yMax;
-
-		int error = pthread_create(threads + index, NULL, *computeIntegral, threadsData + index);
-		if (error != 0)
+		int clientSocket = accept(socket, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
+		if (clientSocket < 0)
 		{
-			throw std::runtime_error("Thread creation error");
+			throw std::runtime_error("Client socket error");
 		}
+
+		try
+		{
+			handleClientConnection(clientSocket);
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << "Connection refuesd" << std::endl;
+		}
+
+		close(clientSocket);		
 	}
-
-	for (int index = 0; index < availabelThreads; ++index)
-	{
-		pthread_join(threads[index], nullptr);
-	}
-
-	int underPointsCount = 0;
-	int allPointsCount = 0;
-	for (int index = 0; index < availabelThreads; ++index)
-	{
-		underPointsCount += threadsData[index].underPoints;
-		allPointsCount += threadsData[index].allIntervalPoints;
-	}
-
-	double result = (double) underPointsCount / allPointsCount; 
-
-	std::cout << "Result: " << result << std::endl;
-
-	std::string response = SimpleJsonBuilder()
-		.addProperty("result", std::string(std::to_string(result)))
-		.toString();
-
-	std::cout << response << std::endl;
-
-	write(clientSocket, response.c_str(), response.size());
 
 	return 0;
 }

@@ -9,10 +9,10 @@ struct ThreadData
 
     double yMin;
     double yMax;
+    double pointsOnInterval;
 
     int progress;
     int underPoints;
-    int allIntervalPoints;
 };
 
 struct ComputionResult
@@ -22,6 +22,6 @@ struct ComputionResult
 };
 
 
-const int POINTS_COUNT = 10000;
+const int POINTS_COUNT = 10000000;
 
 void* computeIntegral(void* args);

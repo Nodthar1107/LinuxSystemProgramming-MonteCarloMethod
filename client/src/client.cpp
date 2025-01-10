@@ -127,5 +127,12 @@ int main(int argc, char* argv[])
 
     write(socket, data.c_str(), data.size());
 
+    char buff[1024];
+    read(socket, buff, 1024);
+
+    std::string result(buff);
+
+    std::cout << result << std::endl;
+
     return 0;
 }

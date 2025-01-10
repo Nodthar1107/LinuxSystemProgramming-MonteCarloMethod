@@ -20,13 +20,12 @@ void* computeIntegral(void* args)
 
     double pointX = threadData->intervalStart;
     double pointXEnd = threadData->intervalStart + threadData->intervalLength;
-    double step = (pointXEnd - threadData->intervalStart) / (double) POINTS_COUNT;
+    double step = (pointXEnd - threadData->intervalStart) / (double) threadData->pointsOnInterval;
 
     double minY = threadData->yMin;
     double maxY = threadData->yMax;
 
     int pointUnderCount = 0;
-    int pointsAboveCount = 0;
 
     while (pointX < pointXEnd)
     {
@@ -37,11 +36,7 @@ void* computeIntegral(void* args)
 
         if (pointXFunctionValue > pointY)
         {
-            ++pointUnderCount;
-        }
-        else
-        {
-            ++pointsAboveCount;
+            threadData->underPoints++;
         }
 
         pointX += step;
@@ -49,11 +44,9 @@ void* computeIntegral(void* args)
         threadData->progress = pointX / pointXEnd * 100;
     }
 
-    std::string points = "Points under: " + std::to_string(pointUnderCount) + " Points above: " + std::to_string(pointsAboveCount);
-    std::cout << points << std::endl;
-
-    threadData->underPoints = pointUnderCount;
-    threadData->allIntervalPoints = pointUnderCount + pointsAboveCount;
+    // Отадочный вывод
+    // std::string points = "Points under: " + std::to_string(pointUnderCount) + " Points above: " + std::to_string(pointsAboveCount);
+    // std::cout << points << std::endl;
 
     std::string message = "Thread with ID " + std::to_string(threadData->id) + " is ready.";
 

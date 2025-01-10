@@ -1,3 +1,3 @@
-client/bin/*
-server/bin/*
-./.vscode
+client/bin/
+server/bin/
+.vscode/
