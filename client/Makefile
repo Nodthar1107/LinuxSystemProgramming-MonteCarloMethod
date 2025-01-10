@@ -6,7 +6,9 @@ HEADERS = src/exceptions/*.h \
 SOURCES = src/client.cpp \
 	src/exceptions/InvalidCharacterException.cpp \
 	src/utils/commandLineUtils.cpp \
-	src/utils/expressionUtils.cpp
+	src/utils/expressionUtils.cpp \
+	src/utils/netUtils.cpp \
+	src/utils/SimpleJsonBuilder.cpp
 
 
 all: clean configure build

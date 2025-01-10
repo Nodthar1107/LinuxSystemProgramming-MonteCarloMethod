@@ -24,12 +24,12 @@ int main()
 
 	if(bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) > 0)
 	{
-		// throw std::exception("Socket bind error");
+		throw std::runtime_error("Socket bind error");
 	}
 
 	if (listen(serverSocket, 1) < 0)
 	{
-		// throw std::exception("Listen error");
+		throw std::runtime_error("Listen error");
 	}
 
 	std::cout << "Server listening on port " << SERVER_PORT << "..." << std::endl;
@@ -38,7 +38,7 @@ int main()
 
 	if (clientSocket < 0)
 	{
-		// throw std::exception("Clietn socket error");
+		throw std::runtime_error("Clietn socket error");
 	}
 
 	char buffer[1024] = {0};

@@ -1,8 +1,11 @@
 #include <iostream>
 #include <string.h>
+#include <unistd.h>
 #include "exceptions/InvalidCharacterException.h"
 #include "utils/expressionUtils.h"
 #include "utils/commandLineUtils.h"
+#include "utils/netUtils.h"
+#include "utils/SimpleJsonBuilder.h"
 
 const std::string HELP_FLAG = "--help";
 const std::string HELP_FLAG_SHORTEN = "-h";
@@ -109,6 +112,19 @@ int main(int argc, char* argv[])
         std::cerr << e.getMessage() << std::endl;
         std::cerr << "Error position: " << e.getPosition() << std::endl;
     }
+
+    int socket = connectToServer("127.0.0.1", 8080);
+
+    std::cout << "Connected to server" << std::endl; 
+
+    SimpleJsonBuilder builder;
+    std::string data = builder
+        .addProperty("expression", expression)
+        .addProperty("start", intervalStart)
+        .addProperty("end", intervalEnd)
+        .toString();
+
+    write(socket, data.c_str(), data.size());
 
     return 0;
 }
