@@ -115,7 +115,7 @@ void* computeIntegral(void* args)
 
     while (pointX < pointXEnd)
     {
-        double pointY = minY + rand_r(&seed) % (long int) (maxY - minY);
+        double pointY = minY + (maxY - minY) * (double)(rand_r(&seed) % RAND_MAX);
         double pointXFunctionValue = computePostfixNotationExpression(threadData->expression, pointX);
 
         // std::cout << "Function result: " << pointXFunctionValue << " GeneratedPoint: " << pointY << std::endl;
