@@ -10,18 +10,10 @@
 #include <unistd.h>
 #include <thread>
 
-void handleClientConnection(int socket)
+void handleClientConnection(int socket, int threadsCount, int points)
 {
     char buffer[1024] = {0};
     read(socket, buffer, 1024);
-
-    int availabelThreads = std::thread::hardware_concurrency();
-    if (availabelThreads == 0)
-    {
-        availabelThreads = 1;
-    }
-
-    availabelThreads = 4;
 
     std::string expression;
     std::string intervalStart;
@@ -47,10 +39,10 @@ void handleClientConnection(int socket)
 
     double yMin = 0;
     double yMax = computeMaxFuncValue(expression, intervalStartValue, intervalEndValue,
-            (intervalEndValue - intervalStartValue) / POINTS_COUNT);
+            (intervalEndValue - intervalStartValue) / points);
 
-    ThreadData threadsData[availabelThreads];
-    pthread_t threads[availabelThreads];
+    ThreadData threadsData[threadsCount];
+    pthread_t threads[threadsCount];
 
     pthread_mutex_t readyThreadsMutex;
     pthread_cond_t readyThreadsCondition;
@@ -58,18 +50,18 @@ void handleClientConnection(int socket)
     pthread_mutex_init(&readyThreadsMutex, NULL);
     pthread_cond_init(&readyThreadsCondition, NULL);
 
-    int notStartedThreadsRemain = availabelThreads;
+    int notStartedThreadsRemain = threadsCount;
 
-    for (int index = 0; index < availabelThreads; ++index)
+    for (int index = 0; index < threadsCount; ++index)
     {
         threadsData[index].id = threads[index];
         threadsData->progress = 0;
         threadsData[index].expression = expression;
-        threadsData[index].intervalLength = (intervalEndValue - intervalStartValue) / availabelThreads;
+        threadsData[index].intervalLength = (intervalEndValue - intervalStartValue) / threadsCount;
         threadsData[index].intervalStart = intervalStartValue + threadsData[index].intervalLength * index;
         threadsData[index].yMin = yMin;
         threadsData[index].yMax = yMax;
-        threadsData[index].pointsOnInterval = POINTS_COUNT / availabelThreads;
+        threadsData[index].pointsOnInterval = points / threadsCount;
         threadsData[index].readyThreadsMutex = &readyThreadsMutex;
         threadsData[index].readyThreadsCondition = &readyThreadsCondition;
         threadsData[index].notStartedThreadRemain = &notStartedThreadsRemain;
@@ -87,11 +79,11 @@ void handleClientConnection(int socket)
     diagnosticArgs.notStartedThreadsRemain = &notStartedThreadsRemain;
     diagnosticArgs.readyThreadsMutex = &readyThreadsMutex;
     diagnosticArgs.readyCondition = &readyThreadsCondition;
-    diagnosticArgs.threadsCount = availabelThreads;
+    diagnosticArgs.threadsCount = threadsCount;
     diagnosticArgs.threadsData = threadsData;
     pthread_create(&consoleThread, NULL, printComputionDetails, (void*) &diagnosticArgs);
 
-    for (int index = 0; index < availabelThreads; ++index)
+    for (int index = 0; index < threadsCount; ++index)
     {
         pthread_join(threads[index], NULL);
     }
@@ -102,12 +94,12 @@ void handleClientConnection(int socket)
     pthread_cond_destroy(&readyThreadsCondition);
 
     int underPointsCount = 0;
-    for (int index = 0; index < availabelThreads; ++index)
+    for (int index = 0; index < threadsCount; ++index)
     {
         underPointsCount += threadsData[index].underPoints;
     }
 
-    double result = (double) underPointsCount / POINTS_COUNT; 
+    double result = (double) underPointsCount / points; 
 
     std::string response = SimpleJsonBuilder()
         .addProperty("result", std::string(std::to_string(result)))

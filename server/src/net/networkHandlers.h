@@ -4,7 +4,7 @@
 #include <string>
 #include <thread>
 
-void handleClientConnection(int socket);
+void handleClientConnection(int socket, int threadsCount, int points);
 
 bool isClientConnectionAlive(int socket);
 

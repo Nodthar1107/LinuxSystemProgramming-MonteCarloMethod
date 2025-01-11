@@ -21,7 +21,6 @@ const std::string MANUAL = "** Server of integral computing **\n\n"
 	"This utility program works as server for integral computing. it can work independently or in conjunction with other "
 	"servers on the local network.\n\n"
 	"Options       Long flags         Meaning\n"
-	"-P            --port             Set port that server will be use. By default it use 8080\n"
 	"-t            --threads-count    Set number of thread for parallel integral computing. By default, the number "
 	"of threads that can be created is taken from the system.\n"
 	"-p            --points           Sets the number of points on the x-axis. By default it use 100 points";
@@ -32,7 +31,37 @@ void handleInterruptSignal(int signal);
 
 int main(int argc, char* argv[])
 {
+	if (includesFlag(argc, argv, "--help", "-h") > -1)
+	{
+		std::cout << MANUAL << std::endl;
+
+		return 0;
+	}
+
 	signal(SIGINT, handleInterruptSignal);
+
+	int error = 0;
+	std::string threadsCountAsString;
+	int availabelThreads = std::thread::hardware_concurrency();
+	if (availabelThreads == 0)
+	{
+		availabelThreads = 1;
+	}
+
+	int threadsCount = availabelThreads;
+	error = getValueFromArgs(argc, argv, "--threads-count", "-t", threadsCountAsString);
+	if (error != -1)
+	{
+		threadsCount = std::stoi(threadsCountAsString);
+	}
+
+	std::string pointsAsString;
+	int points = POINTS_COUNT;
+	error = getValueFromArgs(argc, argv, "-points", "-p", pointsAsString);
+	if (error != -1)
+	{
+		points = std::stoi(threadsCountAsString);
+	}
 
 	sockaddr_in addr = createAddressDescriptor(DEFAULT_PORT);
 
@@ -51,7 +80,7 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			handleClientConnection(clientSocket);
+			handleClientConnection(clientSocket, threadsCount, points);
 		}
 		catch(const std::exception& e)
 		{

@@ -27,12 +27,12 @@ int createServerSocket(sockaddr_in& addr, int connectionsCount)
 
 	int addrlen = sizeof(addr);
 
-	if(bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) > 0)
+	if(bind(serverSocket, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 	{
 		throw std::runtime_error("Socket bind error");
 	}
 
-	if (listen(serverSocket, connectionsCount) < 0)
+	if (listen(serverSocket, connectionsCount) == -1)
 	{
 		throw std::runtime_error("Listen error");
 	}
