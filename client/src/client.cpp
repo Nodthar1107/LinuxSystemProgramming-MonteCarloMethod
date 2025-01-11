@@ -128,11 +128,20 @@ int main(int argc, char* argv[])
     write(socket, data.c_str(), data.size());
 
     char buff[1024];
-    read(socket, buff, 1024);
+    int count = read(socket, buff, 1024);
+    if (count == 0)
+    {
+        std::cout << "Connection refuesd" << std::endl;
+        close(socket);
+
+        return 0;
+    }
 
     std::string result(buff);
 
     std::cout << result << std::endl;
+
+    close(socket);
 
     return 0;
 }

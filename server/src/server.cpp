@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <thread>
 #include <stdlib.h>
+#include <signal.h> 
 
 #include "utils/SimpleJsonBuilder.h"
 #include "utils/commandLineUtils.h"
@@ -25,19 +26,24 @@ const std::string MANUAL = "** Server of integral computing **\n\n"
 	"of threads that can be created is taken from the system.\n"
 	"-p            --points           Sets the number of points on the x-axis. By default it use 100 points";
 
+int serverSocket;
+
+void handleInterruptSignal(int signal);
 
 int main(int argc, char* argv[])
 {
+	signal(SIGINT, handleInterruptSignal);
+
 	sockaddr_in addr = createAddressDescriptor(DEFAULT_PORT);
 
-	int socket = createServerSocket(addr, 1);
-	int addrlen = sizeof(addr);
+	serverSocket = createServerSocket(addr, 1);
 
+	int addrlen = sizeof(addr);
 	std::cout << "Server listening on port " << DEFAULT_PORT << "..." << std::endl;
 
 	while (true)
 	{
-		int clientSocket = accept(socket, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
+		int clientSocket = accept(serverSocket, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
 		if (clientSocket < 0)
 		{
 			throw std::runtime_error("Client socket error");
@@ -56,4 +62,12 @@ int main(int argc, char* argv[])
 	}
 
 	return 0;
+}
+
+void handleInterruptSignal(int signal)
+{
+	std::cout << "Error: Interrupt" << std::endl;
+
+	close(serverSocket);
+	exit(signal);
 }

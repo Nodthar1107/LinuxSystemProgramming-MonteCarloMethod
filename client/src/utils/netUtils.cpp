@@ -28,6 +28,8 @@ int connectToServer(std::string ip, int port)
     {
         std::cerr << "Connection error" << std::endl;
         exit(0);
+
+        close(sock);
     }
 
     return sock;

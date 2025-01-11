@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 sockaddr_in createAddressDescriptor(int port)
 {
@@ -34,6 +35,13 @@ int createServerSocket(sockaddr_in& addr, int connectionsCount)
 	if (listen(serverSocket, connectionsCount) < 0)
 	{
 		throw std::runtime_error("Listen error");
+	}
+
+	int reuse = 1;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+		std::cerr << "Failed to set SO_REUSEADDR option" << std::endl;
+		close(serverSocket);
+		return 1;
 	}
 
     return serverSocket;
