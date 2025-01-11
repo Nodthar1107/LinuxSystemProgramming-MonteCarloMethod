@@ -1,4 +1,8 @@
+#ifndef NETWORK_HANDLERS
+#define NETWORK_HANDLERS
+
 #include <string>
+#include <thread>
 
 void handleClientConnection(int socket);
 
@@ -13,12 +17,18 @@ struct ThreadData
 
     double yMin;
     double yMax;
-    double pointsOnInterval;
+    int pointsOnInterval;
 
-    int progress;
+    float progress;
     int underPoints;
+
+    int* notStartedThreadRemain;
+    pthread_mutex_t* readyThreadsMutex;
+    pthread_cond_t* readyThreadsCondition;
 };
 
 const int POINTS_COUNT = 10000000;
 
 void* computeIntegral(void* args);
+
+#endif
